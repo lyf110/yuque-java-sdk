@@ -1,4 +1,4 @@
-package com.yuque.client.base;
+package com.yuque.core.client;
 
 import com.yuque.domain.dto.CreateDocDTO;
 import com.yuque.domain.po.DocDetailSerializer;

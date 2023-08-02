@@ -1,4 +1,4 @@
-package com.yuque.util.function;
+package com.yuque.core.function;
 
 import com.yuque.exception.YuqueException;
 

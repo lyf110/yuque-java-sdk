@@ -1,7 +1,6 @@
-package com.yuque.client.base;
+package com.yuque.core.client;
 
 import com.yuque.domain.dto.SearchDTO;
-import com.yuque.domain.po.BookDetailSerializer;
 import com.yuque.domain.vo.DownloadVO;
 import com.yuque.domain.vo.ResponseListVO;
 import com.yuque.domain.vo.SearchVO;

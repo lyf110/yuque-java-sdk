@@ -1,10 +1,10 @@
-package com.yuque.client.http;
+package com.yuque.core.http;
 
 
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.StrUtil;
 import com.yuque.exception.YuqueException;
-import com.yuque.util.function.MyFunction;
+import com.yuque.core.function.MyFunction;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
@@ -26,6 +26,8 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
+
+import static com.yuque.constants.YuQueConstants.TOKEN_HEADER_KEY;
 
 /**
  * @author 11029
@@ -202,7 +204,7 @@ public class HttpClientBase {
      */
     public String doRequest(HttpRequestBase httpMethod) throws YuqueException {
         //设置权限头信息
-        httpMethod.setHeader("X-Auth-Token", this.yuqueToken);
+        httpMethod.setHeader(TOKEN_HEADER_KEY, this.yuqueToken);
         HttpClient httpClient = buildHttpClient(true);
 
         try {

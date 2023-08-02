@@ -1,4 +1,4 @@
-package com.yuque.client.base;
+package com.yuque.core.client;
 
 import com.yuque.domain.po.UserDetailSerializer;
 import com.yuque.domain.vo.ResponseVO;

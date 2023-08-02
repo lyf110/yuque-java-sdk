@@ -5,8 +5,9 @@ import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.TypeReference;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.yuque.client.base.IYuQueClient;
-import com.yuque.client.http.HttpClientBase;
+import com.yuque.core.client.IYuQueClient;
+import com.yuque.core.function.MySupplier;
+import com.yuque.core.http.HttpClientBase;
 import com.yuque.domain.dto.*;
 import com.yuque.domain.po.*;
 import com.yuque.domain.vo.DownloadVO;
@@ -15,7 +16,6 @@ import com.yuque.domain.vo.ResponseVO;
 import com.yuque.domain.vo.SearchVO;
 import com.yuque.exception.YuqueException;
 import com.yuque.util.IoUtils;
-import com.yuque.util.function.MySupplier;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +24,7 @@ import org.apache.http.client.methods.HttpRequestBase;
 import java.util.*;
 import java.util.concurrent.*;
 
-import static com.yuque.constants.YuQueConstants.getRestUrl;
+import static com.yuque.constants.YuQueConstants.*;
 import static com.yuque.util.PoUtil.toMap;
 
 /**
@@ -72,14 +72,14 @@ public class YuQueClient extends HttpClientBase implements IYuQueClient {
     @Override
     public Optional<ResponseVO<UserDetailSerializer>> getUserInfoByLoginOrId(String loginOrId) {
         assert StrUtil.isNotEmpty(loginOrId);
-        return requestHandler(() -> buildHttpGet(getRestUrl("/users/" + loginOrId), null),
+        return requestHandler(() -> buildHttpGet(getRestApi(GET_USER_API_TEMPLATE, loginOrId), null),
                 new TypeReference<ResponseVO<UserDetailSerializer>>() {
                 });
     }
 
     @Override
     public Optional<ResponseVO<UserDetailSerializer>> getUserInfo() {
-        return requestHandler(() -> buildHttpGet(getRestUrl("/user"), null),
+        return requestHandler(() -> buildHttpGet(getRestApi(GET_USER_API), null),
                 new TypeReference<ResponseVO<UserDetailSerializer>>() {
                 });
     }
@@ -87,7 +87,7 @@ public class YuQueClient extends HttpClientBase implements IYuQueClient {
     @Override
     public Optional<ResponseListVO<DocSerializer>> getDocList(String namespaceOrId) {
         assert StrUtil.isNotEmpty(namespaceOrId);
-        return requestHandler(() -> buildHttpGet(getRestUrl("/repos/" + namespaceOrId + "/docs"), null),
+        return requestHandler(() -> buildHttpGet(getRestApi(GET_REPOS_DOCS_API_TEMPLATE, namespaceOrId), null),
                 new TypeReference<ResponseListVO<DocSerializer>>() {
                 });
     }
@@ -99,7 +99,7 @@ public class YuQueClient extends HttpClientBase implements IYuQueClient {
         Map<String, String> params = new HashMap<>(1);
         params.put("raw", "1");
 
-        return requestHandler(() -> buildHttpGet(getRestUrl("/repos/" + namespace + "/docs/" + slug), params),
+        return requestHandler(() -> buildHttpGet(getRestApi(GET_REPOS_NAMESPACE_DOCS_SLUG_API_TEMPLATE, namespace, slug), params),
                 new TypeReference<ResponseVO<DocDetailSerializer>>() {
                 });
     }
@@ -108,7 +108,7 @@ public class YuQueClient extends HttpClientBase implements IYuQueClient {
     public Optional<ResponseVO<DocDetailSerializer>> createDoc(String namespaceOrId, CreateDocDTO docDTO) {
         assert StrUtil.isNotEmpty(namespaceOrId);
         assert docDTO != null;
-        return requestHandler(() -> buildHttpPost(getRestUrl("/repos/" + namespaceOrId + "/docs"), toMap(docDTO)),
+        return requestHandler(() -> buildHttpPost(getRestApi(POST_REPOS_DOCS_API_TEMPLATE, namespaceOrId), toMap(docDTO)),
                 new TypeReference<ResponseVO<DocDetailSerializer>>() {
                 });
     }
@@ -120,7 +120,7 @@ public class YuQueClient extends HttpClientBase implements IYuQueClient {
         assert StrUtil.isNotEmpty(docId);
         assert docDTO != null;
 
-        return requestHandler(() -> buildHttpPut(getRestUrl("/repos/" + namespaceOrId + "/docs/" + docId), toMap(docDTO)),
+        return requestHandler(() -> buildHttpPut(getRestApi(PUT_REPOS_DOCS_API_TEMPLATE, namespaceOrId, docId), toMap(docDTO)),
                 new TypeReference<ResponseVO<DocDetailSerializer>>() {
                 });
     }
@@ -130,7 +130,7 @@ public class YuQueClient extends HttpClientBase implements IYuQueClient {
         // DELETE /repos/:namespace/docs/:id
         assert StrUtil.isNotEmpty(namespaceOrId);
         assert StrUtil.isNotEmpty(docId);
-        return requestHandler(() -> buildHttpDelete(getRestUrl("/repos/" + namespaceOrId + "/docs/" + docId), null),
+        return requestHandler(() -> buildHttpDelete(getRestApi(DELETE_REPOS_DOCS_API_TEMPLATE, namespaceOrId, docId), null),
                 new TypeReference<ResponseVO<DocDetailSerializer>>() {
                 });
     }
@@ -241,7 +241,7 @@ public class YuQueClient extends HttpClientBase implements IYuQueClient {
 
     @Override
     public Optional<ResponseListVO<SearchVO>> search(SearchDTO searchDTO) throws YuqueException {
-        return requestHandler(() -> buildHttpGet(getRestUrl("/search"), toMap(searchDTO)),
+        return requestHandler(() -> buildHttpGet(getRestApi(SEARCH_API), toMap(searchDTO)),
                 new TypeReference<ResponseListVO<SearchVO>>() {
                 }
         );
@@ -307,7 +307,7 @@ public class YuQueClient extends HttpClientBase implements IYuQueClient {
     @Override
     public Optional<ResponseListVO<UserSerializer>> listJoinedGroupByLoginOrId(String loginOrId) {
         assert StrUtil.isNotEmpty(loginOrId);
-        return requestHandler(() -> buildHttpGet(getRestUrl("/users/" + loginOrId + "/groups"), null),
+        return requestHandler(() -> buildHttpGet(getRestApi(GET_GROUP_USERS_API_TEMPLATE, loginOrId), null),
                 new TypeReference<ResponseListVO<UserSerializer>>() {
                 });
     }
@@ -328,7 +328,7 @@ public class YuQueClient extends HttpClientBase implements IYuQueClient {
                                                                         GroupUserDTO groupUserDTO) {
         assert StrUtil.isNotEmpty(loginOrId);
         assert groupUserDTO != null;
-        return requestHandler(() -> buildHttpGet(getRestUrl("/groups/" + loginOrId + "/users"), toMap(groupUserDTO)),
+        return requestHandler(() -> buildHttpGet(getRestApi(GET_GROUP_USER_API_TEMPLATE, loginOrId), toMap(groupUserDTO)),
                 new TypeReference<ResponseListVO<GroupUserSerializer>>() {
                 });
     }
@@ -350,7 +350,7 @@ public class YuQueClient extends HttpClientBase implements IYuQueClient {
      */
     @Override
     public Optional<ResponseVO<GroupUserSerializer>> addGroupUser(String groupLoginOrGroupId, String login, GroupUserDTO groupUserDTO) {
-        return requestHandler(() -> buildHttpPut(getRestUrl("/groups/" + groupLoginOrGroupId + "/users/" + login),
+        return requestHandler(() -> buildHttpPut(getRestApi(PUT_GROUPS_USER_API_TEMPLATE, groupLoginOrGroupId, login),
                         toMap(groupUserDTO)),
                 new TypeReference<ResponseVO<GroupUserSerializer>>() {
                 });
@@ -372,7 +372,7 @@ public class YuQueClient extends HttpClientBase implements IYuQueClient {
         assert StrUtil.isNotEmpty(groupLoginOrGroupId);
         assert StrUtil.isNotEmpty(login);
         try {
-            doRequest(buildHttpDelete(getRestUrl("/groups/" + groupLoginOrGroupId + "/users/" + login), null));
+            doRequest(buildHttpDelete(getRestApi(DELETE_GROUPS_USER_API_TEMPLATE, groupLoginOrGroupId, login), null));
         } catch (YuqueException e) {
             e.printStackTrace();
         }
@@ -394,7 +394,7 @@ public class YuQueClient extends HttpClientBase implements IYuQueClient {
     public Optional<ResponseListVO<BookSerializer>> listUserRepos(String loginOrId, GetRepoDTO repoDTO) {
         assert StrUtil.isNotEmpty(loginOrId);
         assert repoDTO != null;
-        return requestHandler(() -> buildHttpGet(getRestUrl("/users/" + loginOrId + "/repos"), toMap(repoDTO)),
+        return requestHandler(() -> buildHttpGet(getRestApi(GET_USER_REPOS_API_TEMPLATE, loginOrId), toMap(repoDTO)),
                 new TypeReference<ResponseListVO<BookSerializer>>() {
                 });
     }
@@ -415,7 +415,7 @@ public class YuQueClient extends HttpClientBase implements IYuQueClient {
     public Optional<ResponseListVO<BookSerializer>> listGroupRepos(String loginOrId, GetRepoDTO repoDTO) {
         assert StrUtil.isNotEmpty(loginOrId);
         assert repoDTO != null;
-        return requestHandler(() -> buildHttpGet(getRestUrl("/groups/" + loginOrId + "/repos"), toMap(repoDTO)),
+        return requestHandler(() -> buildHttpGet(getRestApi(GET_GROUP_REPOS_API_TEMPLATE, loginOrId), toMap(repoDTO)),
                 new TypeReference<ResponseListVO<BookSerializer>>() {
                 });
     }
@@ -435,7 +435,7 @@ public class YuQueClient extends HttpClientBase implements IYuQueClient {
     public Optional<ResponseVO<BookDetailSerializer>> createRepoByUser(String loginOrId, CreateRepoDTO repoDTO) {
         assert StrUtil.isNotEmpty(loginOrId);
         assert repoDTO != null;
-        return requestHandler(() -> buildHttpPost(getRestUrl("/users/" + loginOrId + "/repos"), toMap(repoDTO)),
+        return requestHandler(() -> buildHttpPost(getRestApi(POST_USERS_REPOS_API_TEMPLATE, loginOrId), toMap(repoDTO)),
                 new TypeReference<ResponseVO<BookDetailSerializer>>() {
                 });
     }
@@ -455,7 +455,7 @@ public class YuQueClient extends HttpClientBase implements IYuQueClient {
     public Optional<ResponseVO<BookDetailSerializer>> createRepoByGroup(String loginOrId, CreateRepoDTO repoDTO) {
         assert StrUtil.isNotEmpty(loginOrId);
         assert repoDTO != null;
-        return requestHandler(() -> buildHttpPost(getRestUrl("/groups/" + loginOrId + "/repos"), toMap(repoDTO)),
+        return requestHandler(() -> buildHttpPost(getRestApi(POST_GROUPS_REPOS_API_TEMPLATE, loginOrId), toMap(repoDTO)),
                 new TypeReference<ResponseVO<BookDetailSerializer>>() {
                 });
     }
@@ -474,7 +474,7 @@ public class YuQueClient extends HttpClientBase implements IYuQueClient {
     public Optional<ResponseVO<BookDetailSerializer>> getRepoDetail(String namespaceOrId, GetRepoDTO repoDTO) {
         assert StrUtil.isNotEmpty(namespaceOrId);
         assert repoDTO != null;
-        return requestHandler(() -> buildHttpGet(getRestUrl("/repos/" + namespaceOrId), toMap(repoDTO)),
+        return requestHandler(() -> buildHttpGet(getRestApi(GET_REPOS_API_TEMPLATE, namespaceOrId), toMap(repoDTO)),
                 new TypeReference<ResponseVO<BookDetailSerializer>>() {
                 });
     }
@@ -494,7 +494,7 @@ public class YuQueClient extends HttpClientBase implements IYuQueClient {
     public Optional<ResponseVO<BookDetailSerializer>> updateRepo(String namespaceOrId, CreateRepoDTO repoDTO) {
         assert StrUtil.isNotEmpty(namespaceOrId);
         assert repoDTO != null;
-        return requestHandler(() -> buildHttpPut(getRestUrl("/repos/" + namespaceOrId), toMap(repoDTO)),
+        return requestHandler(() -> buildHttpPut(getRestApi(PUT_REPOS_API_TEMPLATE, namespaceOrId), toMap(repoDTO)),
                 new TypeReference<ResponseVO<BookDetailSerializer>>() {
                 });
     }
@@ -512,7 +512,7 @@ public class YuQueClient extends HttpClientBase implements IYuQueClient {
     public void deleteRepo(String namespaceOrId) {
         assert StrUtil.isNotEmpty(namespaceOrId);
         try {
-            doRequest(buildHttpDelete(getRestUrl("/repos/" + namespaceOrId), null));
+            doRequest(buildHttpDelete(getRestApi(DELETE_REPOS_API_TEMPLATE, namespaceOrId), null));
         } catch (YuqueException e) {
             e.printStackTrace();
         }
@@ -529,7 +529,7 @@ public class YuQueClient extends HttpClientBase implements IYuQueClient {
      */
     @Override
     public Optional<ResponseListVO<TocSerializer>> getRepoTocs(String namespaceOrId) {
-        return requestHandler(() -> buildHttpGet(getRestUrl("/repos/" + namespaceOrId + "/toc"), null),
+        return requestHandler(() -> buildHttpGet(getRestApi(GET_REPOS_TOC_API_TEMPLATE, namespaceOrId), null),
                 new TypeReference<ResponseListVO<TocSerializer>>() {
                 });
     }
